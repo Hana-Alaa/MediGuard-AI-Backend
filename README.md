@@ -41,5 +41,5 @@ export OPENROUTER_API_KEY="your_api_key_here"
 ```
 ### 4. Run the backend server
 ```
-python app.py
+python api.py
 
