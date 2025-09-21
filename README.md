@@ -26,20 +26,20 @@ python -m venv venv
 .\venv\Scripts\activate
 
 ```
-macOS/Linux:
+**macOS/Linux:**
 ```
 python -m venv venv
 source venv/bin/activate
 ```
-# Install dependencies
+### 2. Install dependencies
 ```
 pip install -r requirements.txt
 ```
-# Set environment variable for API key
+### 3. Set environment variable for API key
 ```
 export OPENROUTER_API_KEY="your_api_key_here"
 ```
-# Run the backend server
+### 4. Run the backend server
 ```
 python app.py
 
