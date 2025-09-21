@@ -169,49 +169,6 @@ class MediGuardRuleBasedSystem:
         
         return {'level': 'unknown', 'response': 'Review required', 'alert_level': 'gray', 'total_score': total_score}
 
-    # def comprehensive_vital_analysis(self, patient_data: Dict[str, Any]) -> Dict[str, Any]:
-    #     """
-    #     Comprehensive analysis combining NEWS score with additional clinical rules
-    #     """
-    #     vital_signs = patient_data.get('vital_signs', {})
-    #     errors = self._check_sensor_integrity(vital_signs)
-    #     if errors:
-    #         return {
-    #             "patient_id": patient_data.get("patient_id", "unknown"),
-    #             "sensor_errors": errors,
-    #             "assessment_time": datetime.now().isoformat()
-    #         }
-        
-    #     # Calculate NEWS score
-    #     news_analysis = self.calculate_news_score(vital_signs)
-        
-    #     # Additional rule-based assessments
-    #     additional_assessments = self._additional_clinical_rules(vital_signs)
-        
-    #     # Generate recommendations
-    #     recommendations = self._generate_recommendations(news_analysis, additional_assessments)
-        
-    #     # Determine final alert level
-    #     final_alert = self._determine_final_alert(news_analysis, additional_assessments)
-    #     errors = self._check_sensor_integrity(vital_signs)
-
-    #     if errors:
-    #         return {
-    #             "patient_id": patient_data.get("patient_id", "unknown"),
-    #             "sensor_errors": errors,
-    #             "assessment_time": datetime.now().isoformat()
-    #         }
-            
-    #     return {
-    #         'patient_id': patient_data.get('patient_id', 'unknown'),
-    #         'assessment_time': datetime.now().isoformat(),
-    #         'news_analysis': news_analysis,
-    #         'additional_assessments': additional_assessments,
-    #         'recommendations': recommendations,
-    #         'final_alert': final_alert,
-    #         'requires_immediate_attention': final_alert['level'] in ['red', 'critical']
-    #     }
-
     def comprehensive_vital_analysis(self, patient_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Comprehensive analysis combining NEWS score with additional clinical rules,
@@ -266,7 +223,7 @@ class MediGuardRuleBasedSystem:
             "final_alert": final_alert,
             "requires_immediate_attention": final_alert["level"] in ["red", "critical"],
             "sensor_errors": errors if errors else [],
-            "cleaned_vital_signs": cleaned_vital_signs  # علشان يظهر في JSON إن القيم null
+            "cleaned_vital_signs": cleaned_vital_signs 
         }
 
     def _additional_clinical_rules(self, vital_signs: Dict[str, float]) -> Dict[str, Any]:
@@ -375,109 +332,6 @@ class MediGuardRuleBasedSystem:
                 return {'level': 'yellow', 'color': 'yellow', 'action': 'prompt_assessment'}
             else:
                 return {'level': 'green', 'color': 'green', 'action': 'routine_monitoring'}
-
-# Testing and Demo Functions
-# class VitalSignsSimulator:
-#     """Class to simulate and test different vital sign scenarios"""
-    
-#     @staticmethod
-#     def generate_test_scenarios() -> List[Dict[str, Any]]:
-#         """Generate various test scenarios for system validation"""
-#         scenarios = [
-#             {
-#                 'name': 'Normal Patient',
-#                 'data': {
-#                     'patient_id': 'TEST_001',
-#                     'vital_signs': {
-#                         'respiratory_rate': 16,
-#                         'spo2': 98,
-#                         'systolic_bp': 120,
-#                         'diastolic_bp': 80,
-#                         'pulse': 72,
-#                         'temperature': 37.0
-#                     }
-#                 }
-#             },
-#             {
-#                 'name': 'High Risk Patient - Respiratory Distress',
-#                 'data': {
-#                     'patient_id': 'TEST_002',
-#                     'vital_signs': {
-#                         'respiratory_rate': 28,
-#                         'spo2': 89,
-#                         'systolic_bp': 110,
-#                         'diastolic_bp': 70,
-#                         'pulse': 95,
-#                         'temperature': 37.5
-#                     }
-#                 }
-#             },
-#             {
-#                 'name': 'Critical Patient - Potential Shock',
-#                 'data': {
-#                     'patient_id': 'TEST_003',
-#                     'vital_signs': {
-#                         'respiratory_rate': 22,
-#                         'spo2': 94,
-#                         'systolic_bp': 85,
-#                         'diastolic_bp': 55,
-#                         'pulse': 115,
-#                         'temperature': 36.2
-#                     }
-#                 }
-#             },
-#             {
-#                 'name': 'Fever with Tachycardia',
-#                 'data': {
-#                     'patient_id': 'TEST_004',
-#                     'vital_signs': {
-#                         'respiratory_rate': 20,
-#                         'spo2': 96,
-#                         'systolic_bp': 130,
-#                         'diastolic_bp': 85,
-#                         'pulse': 120,
-#                         'temperature': 39.2
-#                     }
-#                 }
-#             }
-#         ]
-#         return scenarios
-
-# def run_system_demo():
-#     """Demo function to test the Rule-Based System"""
-#     print("🩺 MediGuard Rule-Based Vital Signs Analysis System")
-#     print("=" * 60)
-    
-#     # Initialize the system
-#     mediguard = MediGuardRuleBasedSystem()
-#     simulator = VitalSignsSimulator()
-    
-#     # Get test scenarios
-#     test_scenarios = simulator.generate_test_scenarios()
-    
-#     for scenario in test_scenarios:
-#         print(f"\n📋 Testing Scenario: {scenario['name']}")
-#         print("-" * 40)
-        
-#         # Run analysis
-#         result = mediguard.comprehensive_vital_analysis(scenario['data'])
-        
-#         # Display results
-#         print(f"Patient ID: {result['patient_id']}")
-#         print(f"NEWS Score: {result['news_analysis']['total_news_score']}")
-#         print(f"Risk Level: {result['news_analysis']['risk_category']['level'].upper()}")
-#         print(f"Alert Level: {result['final_alert']['level'].upper()}")
-        
-#         print("\nRecommendations:")
-#         for rec in result['recommendations']:
-#             print(f"  • {rec}")
-        
-#         if result['requires_immediate_attention']:
-#             print("\n🚨 IMMEDIATE ATTENTION REQUIRED!")
-        
-#         print("\nDetailed Breakdown:")
-#         for vital, details in result['news_analysis']['individual_scores'].items():
-#             print(f"  {details['parameter']}: {details['value']} (Score: {details['score']})")
 
 if __name__ == "__main__":
     # Run the demo
