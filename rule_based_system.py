@@ -223,7 +223,7 @@ class MediGuardRuleBasedSystem:
             "final_alert": final_alert,
             "requires_immediate_attention": final_alert["level"] in ["red", "critical"],
             "sensor_errors": errors if errors else [],
-            "cleaned_vital_signs": cleaned_vital_signs 
+            "cleaned_vital_signs": cleaned_vital_signs  # علشان يظهر في JSON إن القيم null
         }
 
     def _additional_clinical_rules(self, vital_signs: Dict[str, float]) -> Dict[str, Any]:
