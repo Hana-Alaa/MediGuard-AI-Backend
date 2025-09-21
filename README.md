@@ -16,3 +16,21 @@ MediGuard Backend is part of the MediGuard AI system, designed to automatically 
 - TensorFlow, scikit-learn  
 - SpeechRecognition  
 - OpenAI API
+
+---
+
+## Setup Instructions
+
+### 1. Create a virtual environment
+
+**Windows:**
+```powershell
+python -m venv venv
+.\venv\Scripts\activate
+pip install -r requirements.txt
+$env:OPENROUTER_API_KEY="your_api_key_here"
+python app.py
+
+
+
+
