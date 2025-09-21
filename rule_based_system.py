@@ -291,18 +291,12 @@ class MediGuardRuleBasedSystem:
         if risk_level == 'high':
             recommendations.append(self._translate("urgent"))
             recommendations.append(self._translate("monitor_15"))
-            # recommendations.append("🚨 مطلوب تدخل طبي عاجل - اتصل بالطبيب فوراً")
-            # recommendations.append("📊 مراقبة العلامات الحيوية كل 15 دقيقة")
         elif risk_level == 'medium':
             recommendations.append(self._translate("medium"))
             recommendations.append(self._translate("monitor_30"))
-            # recommendations.append("⚠️ مطلوب تقييم طبي - راجع الطبيب في أقرب وقت")
-            # recommendations.append("📊 مراقبة العلامات الحيوية كل 30 دقيقة")
         else:
             recommendations.append(self._translate("normal"))
             recommendations.append(self._translate("routine"))
-            # recommendations.append("✅ العلامات الحيوية في المعدل المقبول")
-            # recommendations.append("📊 متابعة روتينية كل 4-6 ساعات")
         
         # Additional specific recommendations
         for assessment_type, details in additional_assessments.items():
@@ -310,7 +304,6 @@ class MediGuardRuleBasedSystem:
                 for combo in details:
                     if combo['severity'] == 'critical':
                         recommendations.append(self._translate("critical_combo", desc=combo['description']))
-                        # recommendations.append(f"🆘 {combo['description']} - تدخل فوري مطلوب")
         
         return recommendations
 
@@ -339,10 +332,9 @@ if __name__ == "__main__":
     
     # Example of how to use with real data
     print("\n" + "="*60)
-    print("xample with Custom Patient Data")
+    print("Example with Custom Patient Data")
     print("="*60)
     
-    # mediguard = MediGuardRuleBasedSystem()
     mediguard = MediGuardRuleBasedSystem(language="ar")
     
     # patient data
