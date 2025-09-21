@@ -19,18 +19,27 @@ MediGuard Backend is part of the MediGuard AI system, designed to automatically 
 
 ---
 
-## Setup Instructions
-
-### 1. Create a virtual environment
-
+### 1. Create a virtual environment and install dependencies
 **Windows:**
 ```powershell
 python -m venv venv
 .\venv\Scripts\activate
+
+```
+macOS/Linux:
+```
+python -m venv venv
+source venv/bin/activate
+```
+# Install dependencies
+```
 pip install -r requirements.txt
-$env:OPENROUTER_API_KEY="your_api_key_here"
+```
+# Set environment variable for API key
+```
+export OPENROUTER_API_KEY="your_api_key_here"
+```
+# Run the backend server
+```
 python app.py
-
-
-
 
