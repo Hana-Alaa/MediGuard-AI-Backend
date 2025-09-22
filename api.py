@@ -67,11 +67,19 @@ def integrated_analysis():
             "patient_id": patient_id,
             "name": data.get("name"),
             "age": data.get("age"),
-            "gender": data.get("gender"),
+            # Ensure gender falls back to existing or a safe default
+            "gender": data.get("gender") if data.get("gender") not in (None, "") else "unknown",
             "chronic_conditions": data.get("chronic_conditions", []),
             "notes": data.get("notes", ""),
             "analysis_history": []
         }
+
+        # If an existing patient file has a gender, prefer it when incoming data omits it
+        existing = load_patient(patient_id)
+        if existing:
+            existing_gender = existing.get("gender")
+            if existing_gender not in (None, ""):
+                patient["gender"] = existing_gender
 
         # Update patient data
         patient["ecg_signal"] = ecg_signal.tolist()
@@ -82,6 +90,10 @@ def integrated_analysis():
             "risk_level": results_clean.get("combined_assessment", {}).get("combined_risk_level"),
             "alert_color": results_clean.get("combined_assessment", {}).get("alert_color")
         })
+
+        # Make sure gender is always set to a non-empty value before saving
+        if not patient.get("gender"):
+            patient["gender"] = "unknown"
 
         # Save updated patient file
         save_patient(patient_id, patient)

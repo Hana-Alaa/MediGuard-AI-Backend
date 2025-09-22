@@ -200,10 +200,30 @@ def generate_report(data, lang="ar"):
 
         return text
     
+    def normalize_gender_raw(gender_raw, lang):
+        """Normalize incoming gender values and return a language-appropriate label.
+        Returns Arabic labels when lang=='ar', English when lang=='en'.
+        """
+        if not isinstance(gender_raw, str) or not gender_raw.strip():
+            return 'غير محدد' if lang == 'ar' else 'unspecified'
+
+        g = gender_raw.strip().lower()
+        # common variants
+        male_values = {'male', 'm', 'ذكر', 'man', 'masculine'}
+        female_values = {'female', 'f', 'أنثى', 'woman', 'feminine'}
+
+        if g in male_values:
+            return 'ذكر' if lang == 'ar' else 'male'
+        if g in female_values:
+            return 'أنثى' if lang == 'ar' else 'female'
+
+        # fallback
+        return 'غير محدد' if lang == 'ar' else 'unspecified'
+    
     # --- Basic patient info ---
     name = data.get("name", "Unknown")
     age = data.get("age", "N/A")
-    gender_raw = data.get("gender", "Unknown")
+    gender_raw = data.get("gender", "")
     vitals = data.get("vitals", {})
 
     # --- Prepare data for RuleBasedSystem ---
@@ -239,24 +259,8 @@ def generate_report(data, lang="ar"):
                 else:  # implausible
                     error_msgs.append(f"The sensor for {err['sensor']} seems improperly attached or giving implausible readings. Please reattach correctly.")
 
-    if lang == "en":
-        # Always output in English
-        gender_raw = str(data.get("gender", "")).strip().lower()
-
-        if lang == "en":
-            if gender_raw in ["male", "ذكر", "m"]:
-                gender = "male"
-            elif gender_raw in ["female", "أنثى", "f"]:
-                gender = "female"
-            else:
-                gender = "unspecified"
-        elif lang == "ar":
-            if gender_raw in ["male", "ذكر", "m"]:
-                gender = "ذكر"
-            elif gender_raw in ["female", "أنثى", "f"]:
-                gender = "أنثى"
-            else:
-                gender = "غير محدد"
+    # Normalize gender once for the chosen language so `gender` is always defined
+    gender = normalize_gender_raw(str(gender_raw), lang)
 
 
     last_analysis = data.get("last_analysis", {})
@@ -307,10 +311,10 @@ def generate_report(data, lang="ar"):
 ⚠️ مستوى الخطر العام: {risk_level} 
 
 📋 تقييم القراءات الحيوية  
-{('🔎 ملاحظات الأجهزةt:\n' + "\n".join([f"- {n}" for n in notes])) if notes else ''}
-{('✅ مؤشرات إيجابية:\n' + "\n".join([f"- {p}" for p in positives]) + "\n") if positives else ''}
+{('✅ مؤشرات إيجابية:\n' + "\n".join([f"- {p}" for p in positives]) ) if positives else ''}
 {('⚠️ تحذيرات:\n' + "\n".join([f"- {dn}" for dn in warnings_notes])+ "\n") if warnings_notes else ''}
-{('📋 توصيات للحفاظ على المستوى:\n' + "\n".join([f"- {r}" for r in recommendations]) + "") if recommendations else ''}
+{('🔎 مؤشرات تحتاج متابعة\n' + "\n".join([f"- {n}" for n in notes])) + "\n"   if notes else ''}
+{('📋 توصيات للحفاظ على المستوى:\n' + "\n" .join([f"- {r}" for r in recommendations]) + "") if recommendations else ''}
 
 📝 ملاحظة طبية
 - يُنصح بأن يستمر المريض في القياسات الدورية  
@@ -329,10 +333,10 @@ Gender: {gender}
 
 ⚠️ Overall Risk Level: {risk_level}
 
-📋 Vital Signs Evaluation
-{('🔎 Device Notes:\n' + "\n".join([f"- {n}" for n in notes])) if notes else ''}
-{('✅ Positive Health Indicators:\n' + "\n".join([f"- {p}" for p in positives]) + "\n") if positives else ''}
+📋 Vital Signs Evaluation 
+{('✅ Positive Health Indicators:\n' + "\n".join([f"- {p}" for p in positives])) if positives else ''}
 {('⚠️ Urgent Warnings:\n' + "\n".join([f"- {dn}" for dn in warnings_notes])+ "\n") if warnings_notes else ''}
+{('🔎 Observations for Monitoring:\n' + "\n".join([f"- {n}" for n in notes])) + "\n" if notes else ''}
 {('📋 Recommendations to Maintain Level:\n' + "\n".join([f"- {r}" for r in recommendations]) + "") if recommendations else ''}
 
 📝 Medical Note 

@@ -91,7 +91,8 @@ def get_patient_context(patient_id="unknown"):
 # Question classification using LLM
 def classify_question(user_input, lang="ar"):
     # Retain vital keywords check as is
-    vital_keywords = ["blood pressure", "bp", "heart rate", "hr", "temperature", "temp", "spo2", "oxygen", "respiratory"]
+    vital_keywords = ["blood pressure", "bp", "heart rate", "hr", "temperature", "temp", "spo2", "oxygen", "respiratory", "ecg", "ekg", "electrocardiogram",
+                    "ضغط الدم", "النبض", "معدل ضربات القلب", "درجة الحرارة", "الأكسجين", "معدل التنفس", "رسم القلب", "إيكو", "إي كيه جي", "مخطط كهربية القلب", "مخطط القلب", "حرارة"]
     if any(k.lower() in user_input.lower() for k in vital_keywords):
         return "medical_question"
 
