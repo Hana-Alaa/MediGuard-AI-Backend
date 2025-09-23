@@ -1,3 +1,6 @@
+import whisper
+import base64
+import tempfile
 import numpy as np, json, os
 from flask import Flask, request, jsonify
 from chatbot_module import process_message
@@ -31,6 +34,12 @@ def convert(obj):
     if isinstance(obj, np.floating): return float(obj)
     if isinstance(obj, np.ndarray): return obj.tolist()
     return obj
+
+model = whisper.load_model("small")
+
+def speech_to_text(audio_file_path):
+    result = model.transcribe(audio_file_path)
+    return result['text']
 
 # API for integrated patient analysis
 @app.route("/integrated-analysis", methods=["POST"])
@@ -137,6 +146,29 @@ def chat():
         bot_reply = f"⚠️ حصل خطأ: {str(e)}"
 
     return jsonify({"reply": bot_reply})
+
+@app.route("/chat-audio", methods=["POST"])
+def chat_audio():
+    data = request.json
+    audio_b64 = data.get("audio_base64")
+    patient_id = data.get("patient_id", "unknown")
+
+    audio_bytes = base64.b64decode(audio_b64)
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_file:
+        tmp_file.write(audio_bytes)
+        tmp_path = tmp_file.name
+
+    try:
+        message_text = speech_to_text(tmp_path)
+        bot_reply = process_message(message_text, patient_id=patient_id)
+    except Exception as e:
+        bot_reply = f"⚠️ حصل خطأ: {str(e)}"
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+
+    return jsonify({"reply": bot_reply})
+
 
 if __name__ == "__main__":
     print(app.url_map)

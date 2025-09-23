@@ -195,6 +195,37 @@ class IntegratedMediGuardSystem:
             'requires_immediate_attention': final_risk == 'high'
         }
 
+    # def _generate_unified_recommendations(self, analysis_results):
+    #     """Generate clear recommendations for patient/doctors"""
+    #     recommendations = []
+        
+    #     # ECG-specific advice
+    #     if analysis_results.get('ecg_analysis'):
+    #         ecg_class = analysis_results['ecg_analysis']['class']
+    #         confidence = analysis_results['ecg_analysis']['confidence']
+            
+    #         if ecg_class in [2, 4]:  # Ventricular or Unknown
+    #             recommendations.append(self.ecg_translations["ventricular"][self.language])
+    #         elif ecg_class == 1:  # Supraventricular
+    #             recommendations.append(self.ecg_translations["supraventricular"][self.language])
+    #         elif ecg_class == 3:  # Fusion
+    #             recommendations.append(self.ecg_translations["fusion"][self.language])
+            
+    #         if confidence < 0.8:
+    #             recommendations.append(self.ecg_translations["low_conf"][self.language])
+        
+    #     # Vital signs advice
+    #     if analysis_results.get('vital_signs_analysis'):
+    #         vital_recs = analysis_results['vital_signs_analysis'].get('recommendations', [])
+    #         recommendations.extend(vital_recs)
+        
+    #     # Emergency advice if needed
+    #     combined_risk = analysis_results.get('combined_assessment', {})
+    #     if combined_risk.get('requires_immediate_attention'):
+    #         recommendations.insert(0, self.ecg_translations["emergency"][self.language])
+        
+    #     return recommendations
+
     def _generate_unified_recommendations(self, analysis_results):
         """Generate clear recommendations for patient/doctors"""
         recommendations = []
@@ -202,17 +233,12 @@ class IntegratedMediGuardSystem:
         # ECG-specific advice
         if analysis_results.get('ecg_analysis'):
             ecg_class = analysis_results['ecg_analysis']['class']
-            confidence = analysis_results['ecg_analysis']['confidence']
-            
             if ecg_class in [2, 4]:  # Ventricular or Unknown
                 recommendations.append(self.ecg_translations["ventricular"][self.language])
             elif ecg_class == 1:  # Supraventricular
                 recommendations.append(self.ecg_translations["supraventricular"][self.language])
             elif ecg_class == 3:  # Fusion
                 recommendations.append(self.ecg_translations["fusion"][self.language])
-            
-            if confidence < 0.8:
-                recommendations.append(self.ecg_translations["low_conf"][self.language])
         
         # Vital signs advice
         if analysis_results.get('vital_signs_analysis'):

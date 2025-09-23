@@ -39,23 +39,6 @@ def call_llm(prompt):
         print(f"⚠️ Error calling LLM: {e}")
         return ""
 
-def normalize_name(name, lang="ar"):
-    """Translate patient name to match report language"""
-    if not name or name == "Unknown":
-        return name 
-
-    # Translate to English
-    if lang == "en" and re.search(r'[\u0600-\u06FF]', name):
-        prompt = f"Translate the following name into English only, no extra text: {name}"
-        return call_llm(prompt)
-
-        # Translate to Arabic
-    if lang == "ar" and re.search(r'[A-Za-z]', name):
-        prompt = f"ترجم الاسم التالي إلى العربية فقط بدون أي إضافات: {name}"
-        return call_llm(prompt)
-
-    return name
-        
 def generate_smart_recommendations(data, lang="ar"):
     """Generate smart recommendations with translation support"""
     try:
@@ -111,10 +94,9 @@ Risk level: {risk_level}
         for rec in smart_recs_en:
             rec = rec.strip()
             rec = re.sub(r'^[\-\*\•\d\.\s]+', '', rec)
-            rec = rec.replace("**", "")  # Remove markdown styling
+            rec = rec.replace("**", "")
             if rec:
                 clean_recs.append(rec)
-
 
         # 3. Translate to Arabic if requested 
         if lang == "ar" and clean_recs:
@@ -125,7 +107,7 @@ Risk level: {risk_level}
             for rec in translated:
                 rec = rec.strip()
                 rec = re.sub(r'^[\-\*\•\d\.\s]+', '', rec)
-                rec = rec.replace("**", "")  # Remove markdown styling
+                rec = rec.replace("**", "")
                 rec = re.sub(r'[^\u0600-\u06FFa-zA-Z0-9\s\.,;:!?()%$@#&*\-+=\[\]{}]', '', rec)
                 if rec:
                     translated_clean.append(rec)
@@ -201,14 +183,11 @@ def generate_report(data, lang="ar"):
         return text
     
     def normalize_gender_raw(gender_raw, lang):
-        """Normalize incoming gender values and return a language-appropriate label.
-        Returns Arabic labels when lang=='ar', English when lang=='en'.
-        """
+        """Normalize incoming gender values and return a language-appropriate label."""
         if not isinstance(gender_raw, str) or not gender_raw.strip():
             return 'غير محدد' if lang == 'ar' else 'unspecified'
 
         g = gender_raw.strip().lower()
-        # common variants
         male_values = {'male', 'm', 'ذكر', 'man', 'masculine'}
         female_values = {'female', 'f', 'أنثى', 'woman', 'feminine'}
 
@@ -217,7 +196,6 @@ def generate_report(data, lang="ar"):
         if g in female_values:
             return 'أنثى' if lang == 'ar' else 'female'
 
-        # fallback
         return 'غير محدد' if lang == 'ar' else 'unspecified'
     
     # --- Basic patient info ---
@@ -250,18 +228,16 @@ def generate_report(data, lang="ar"):
                 sensor_name = translate(err['sensor'])  
                 if "disconnected" in err['error']:
                     error_msgs.append(f"جهاز {sensor_name} غير متصل. رجاءً تأكد من تشغيله وتوصيله بشكل صحيح.")
-                else:  # implausible
+                else:
                     error_msgs.append(f"السنسور الخاص بـ {sensor_name} غير مركب بشكل صحيح . تأكد من تركيبه فى المكان الصحيح.")
         else:
             for err in sensor_errors:
                 if "disconnected" in err['error']:
                     error_msgs.append(f"{err['sensor']} device is not connected. Please check the device connection.")
-                else:  # implausible
+                else:
                     error_msgs.append(f"The sensor for {err['sensor']} seems improperly attached or giving implausible readings. Please reattach correctly.")
 
-    # Normalize gender once for the chosen language so `gender` is always defined
     gender = normalize_gender_raw(str(gender_raw), lang)
-
 
     last_analysis = data.get("last_analysis", {})
 
@@ -294,10 +270,34 @@ def generate_report(data, lang="ar"):
         for combo in additional_assessments['critical_combinations']:
             warnings.append(f"⚠️ {translate(combo['description'])}")
 
-    name = data.get("name", "Unknown")
-    name = normalize_name(name, lang)  
-
     warnings_notes = warnings + error_msgs
+    sections = []
+    if positives:
+        sections.append("✅ Positive Health Indicators:\n" + "\n".join([f"- {p}" for p in positives]))
+    if warnings_notes:
+        sections.append("⚠️ Urgent Warnings:\n" + "\n".join([f"- {dn}" for dn in warnings_notes]))
+    if notes:
+        sections.append("🔎 Observations for Monitoring:\n" + "\n".join([f"- {n}" for n in notes]))
+    if recommendations:
+        sections.append("📋 Advice to Maintain Level:\n" + "\n".join([f"- {r}" for r in recommendations]))
+
+    vital_section = "\n\n".join(sections)
+    
+    sections_ar = []
+
+    if positives:
+        sections_ar.append("✅ مؤشرات إيجابية:\n" + "\n".join([f"- {p}" for p in positives]))
+
+    if warnings_notes:
+        sections_ar.append("⚠️ تحذيرات:\n" + "\n".join([f"- {dn}" for dn in warnings_notes]))
+
+    if notes:
+        sections_ar.append("🔎 مؤشرات تحتاج متابعة:/n" + "\n".join([f"- {n}" for n in notes]))
+
+    if recommendations:
+        sections_ar.append("📋 نصايح للحفاظ على المستوى:\n" + "\n".join([f"- {r}" for r in recommendations]))
+
+    vital_section_ar = "\n\n".join(sections_ar)
 
     # Arabic report
     if lang == "ar":
@@ -311,10 +311,7 @@ def generate_report(data, lang="ar"):
 ⚠️ مستوى الخطر العام: {risk_level} 
 
 📋 تقييم القراءات الحيوية  
-{('✅ مؤشرات إيجابية:\n' + "\n".join([f"- {p}" for p in positives]) ) if positives else ''}
-{('⚠️ تحذيرات:\n' + "\n".join([f"- {dn}" for dn in warnings_notes])+ "\n") if warnings_notes else ''}
-{('🔎 مؤشرات تحتاج متابعة\n' + "\n".join([f"- {n}" for n in notes])) + "\n"   if notes else ''}
-{('📋 توصيات للحفاظ على المستوى:\n' + "\n" .join([f"- {r}" for r in recommendations]) + "") if recommendations else ''}
+{vital_section_ar}
 
 📝 ملاحظة طبية
 - يُنصح بأن يستمر المريض في القياسات الدورية  
@@ -334,10 +331,7 @@ Gender: {gender}
 ⚠️ Overall Risk Level: {risk_level}
 
 📋 Vital Signs Evaluation 
-{('✅ Positive Health Indicators:\n' + "\n".join([f"- {p}" for p in positives])) if positives else ''}
-{('⚠️ Urgent Warnings:\n' + "\n".join([f"- {dn}" for dn in warnings_notes])+ "\n") if warnings_notes else ''}
-{('🔎 Observations for Monitoring:\n' + "\n".join([f"- {n}" for n in notes])) + "\n" if notes else ''}
-{('📋 Recommendations to Maintain Level:\n' + "\n".join([f"- {r}" for r in recommendations]) + "") if recommendations else ''}
+{vital_section}
 
 📝 Medical Note 
 - Continue regular monitoring  
@@ -359,11 +353,6 @@ def generate_summary_from_report(data, lang="ar"):
     Generate a short, natural summary of the patient's condition
     directly from the detailed report using the LLM.
     """
-
-    # Fix patient name normalization based on language
-    if "name" in data:
-        data["name"] = normalize_name(data["name"], lang)
-        
     full_report = generate_report(data, lang=lang)
 
     if lang == "ar":
@@ -388,5 +377,4 @@ Here is the full detailed patient report:
 - Describe the overall health status (e.g. stable / good / needs close monitoring) with only the key points.
 - Do not copy-paste; rephrase naturally.
 """
-
     return call_llm(prompt)

@@ -91,7 +91,7 @@ def get_patient_context(patient_id="unknown"):
 # Question classification using LLM
 def classify_question(user_input, lang="ar"):
     # Retain vital keywords check as is
-    vital_keywords = ["blood pressure", "bp", "heart rate", "hr", "temperature", "temp", "spo2", "oxygen", "respiratory", "ecg", "ekg", "electrocardiogram",
+    vital_keywords = ["blood pressure", "bp", "heart rate", "hr", "temperature", "temp", "spo2", "oxygen", "respiratory", "ecg", "ekg", "electrocardiogram","pulse rate"
                     "ضغط الدم", "النبض", "معدل ضربات القلب", "درجة الحرارة", "الأكسجين", "معدل التنفس", "رسم القلب", "إيكو", "إي كيه جي", "مخطط كهربية القلب", "مخطط القلب", "حرارة"]
     if any(k.lower() in user_input.lower() for k in vital_keywords):
         return "medical_question"
@@ -100,6 +100,7 @@ def classify_question(user_input, lang="ar"):
     if lang == "ar":
         prompt = f"""
 صنّف النص التالي إلى واحد فقط من التصنيفات:
+- medical_question
 - status_report
 - lifestyle_question
 - non_medical
@@ -112,6 +113,7 @@ def classify_question(user_input, lang="ar"):
     else:
         prompt = f"""
 Classify the following text into one of: 
+- medical_question
 - status_report
 - lifestyle_question
 - non_medical
@@ -204,7 +206,7 @@ Patient data:
         return call_llm(final_prompt)
 
     # -------- If non-medical question --------
-    return "أنا آسف، لا أستطيع الإجابة على هذا السؤال." if lang == "ar" else \
+    return "آسف، يمكنني فقط الإجابة على الأسئلة المتعلقة بالصحة." if lang == "ar" else \
             "I'm sorry, I can only answer health-related questions."
 
 # Interfaces

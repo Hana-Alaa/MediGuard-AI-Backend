@@ -108,7 +108,8 @@ class MediGuardRuleBasedSystem:
         errors = []
 
         # Heart Rate
-        hr = vital_signs.get('pulse')
+        hr = vital_signs.get('pulse') or vital_signs.get('hr')
+
         if hr is None:
             errors.append({"sensor": "Heart Rate", "error": "device_disconnected"})
         elif not (30 <= hr <= 220):
@@ -122,7 +123,7 @@ class MediGuardRuleBasedSystem:
             errors.append({"sensor": "SpO2", "error": f"implausible_value: {spo2}"})
 
         # Temperature
-        temp = vital_signs.get('temperature')
+        temp = vital_signs.get('temperature') or vital_signs.get('temp')
         if temp is None:
             errors.append({"sensor": "Temperature", "error": "device_disconnected"})
         elif not (30 <= temp <= 43):
