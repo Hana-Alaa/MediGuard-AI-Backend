@@ -255,7 +255,6 @@ def transcribe_audio_bytes(audio_bytes, ext="wav"):
     detected_lang = info.language  
     return text, detected_lang
 
-
 def chatbot_voice():
     print("🟢 Voice conversation...")
     while True:
