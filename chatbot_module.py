@@ -1,11 +1,17 @@
 import os
 import re
+import io
 import json
+import wave
+import tempfile
+import playsound
+import numpy as np
+from gtts import gTTS
 from openai import OpenAI
 from langdetect import detect
 import speech_recognition as sr
+from faster_whisper import WhisperModel
 from vitals_analyzer import generate_report, get_vitals, generate_summary_from_report
-
 # =====================
 # Setup OpenRouter 
 # =====================
@@ -128,12 +134,9 @@ Answer with ONLY one category.
 
 # Main logic
 def process_message(user_message, patient_id="unknown"):
-
     context = get_patient_context(patient_id)
-
     if not user_message or not user_message.strip():
         return "من فضلك اسأل سؤال طبي محدد."
-
     lang = detect_language(user_message)
 
     # Classify the question (now includes greeting/farewell)
@@ -210,20 +213,68 @@ Patient data:
             "I'm sorry, I can only answer health-related questions."
 
 # Interfaces
+def record_audio(duration=5, samplerate=16000):
+    print("🎤 Speak now...")
+    audio = sd.rec(int(duration * samplerate), samplerate=samplerate, channels=1, dtype="int16")
+    sd.wait()
+    
+    # Save to WAV in memory
+    buffer = io.BytesIO()
+    with wave.open(buffer, "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)  # 16-bit
+        wf.setframerate(samplerate)
+        wf.writeframes(audio.tobytes())
+    return buffer.getvalue()
+
+def speak_text(text, lang="en"):
+    try:
+        tts = gTTS(text=text, lang=lang)  
+        with tempfile.NamedTemporaryFile(delete=True, suffix=".mp3") as fp:
+            tts.save(fp.name)
+            playsound.playsound(fp.name)
+    except Exception as e:
+        print(f"❌ Error in TTS: {e}")
+
+# ---------------- Whisper Model ----------------
+model = WhisperModel("small", device="cpu", compute_type="int8")
+
+def speech_to_text(audio_file_path):
+    segments, info = model.transcribe(audio_file_path, beam_size=5)
+    text = " ".join([seg.text for seg in segments])
+    return text.strip()
+
+def transcribe_audio_bytes(audio_bytes, ext="wav"):
+    with tempfile.NamedTemporaryFile(suffix=f".{ext}", delete=False) as tmp:
+        tmp.write(audio_bytes)
+        tmp_path = tmp.name
+
+    segments, info = model.transcribe(tmp_path, beam_size=5, language=None)  
+    text = " ".join([seg.text for seg in segments]).strip()
+
+    detected_lang = info.language  
+    return text, detected_lang
+
+
 def chatbot_voice():
     print("🟢 Voice conversation...")
     while True:
         try:
-            user_message = listen()
-            if not user_message:
-                print("❌ Could not understand voice, try again...")
-                continue
-            print(f"👤 You: {user_message}")
-            if user_message.lower() in ["quit", "خروج", "إنهاء"]:
+            audio_bytes = record_audio(5)
+            text, detected_lang = transcribe_audio_bytes(audio_bytes, ext="wav")
+            print(f"🎤 Voice ({detected_lang}): {text}")
+
+            if text.lower() in ["quit", "خروج", "إنهاء"]:
                 print("👋 Goodbye!")
                 break
-            response = process_message(user_message)
+
+            response = process_message(text)  # هيديك الرد بناءً على اللغة المكتشفة
             print(f"🤖 Bot: {response}")
+
+            # نطق الرد بنفس اللغة
+            reply_lang = detect_language(response)  # يستخدم detect_language اللي عندك
+            speak_text(response, lang="ar" if reply_lang=="ar" else "en")
+
         except KeyboardInterrupt:
             print("👋 Conversation ended")
             break
