@@ -24,3 +24,7 @@ Thumbs.db
 .env
 *.key
 *.json
+
+# Ignore folders
+patients/
+uploads/
