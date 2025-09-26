@@ -1,6 +1,5 @@
 import joblib
 import tensorflow as tf
-from tensorflow.keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
 from rule_based_system import MediGuardRuleBasedSystem
 from datetime import datetime
@@ -22,7 +21,8 @@ class IntegratedMediGuardSystem:
         self.rule_based_system = MediGuardRuleBasedSystem(language=language)
         
         # Load trained ECG classification model
-        self.ecg_model = load_model('ecg_model/ecg_classification_model.h5')
+        self.ecg_model = tf.keras.models.load_model("model.h5")
+
         self.ecg_scaler = MinMaxScaler()
         
         # ECG class mappings (simplified explanations for non-doctors)
