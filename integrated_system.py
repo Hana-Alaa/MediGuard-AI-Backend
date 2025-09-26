@@ -21,7 +21,7 @@ class IntegratedMediGuardSystem:
         self.rule_based_system = MediGuardRuleBasedSystem(language=language)
         
         # Load trained ECG classification model
-        self.ecg_model = tf.keras.models.load_model("model.h5")
+        self.ecg_model = tf.keras.models.load_model("ecg_model/ecg_classification_model.h5")
 
         self.ecg_scaler = MinMaxScaler()
         
