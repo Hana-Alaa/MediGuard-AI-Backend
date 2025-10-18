@@ -220,7 +220,6 @@ class IntegratedMediGuardSystem:
         
         return recommendations
 
-
 if __name__ == "__main__":
     # Example run
     system = IntegratedMediGuardSystem(language="ar")
